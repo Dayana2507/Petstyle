@@ -1,9 +1,9 @@
-const _supabase_URL = 'https://zoxzuqqssiarhtzfqjgy.__supabase.co';
-const _supabase_ANON_KEY = 'sb_publishable_5bSUa-5IvFVTTz839EaaZA_BlzMDNko';
+const SUPABASE_URL = 'https://zoxzuqqssiarhtzfqjgy.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_5bSUa-5IvFVTz839EaaZA_BlzMDNko';
 
+const { createClient } = supabase;
+const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const { createClient } = __supabase;
-const __supabase = createClient(_supabase_URL, _supabase_ANON_KEY);
 // =====================================================================
 // PETSTYLE · app.js — HTML + CSS + JavaScript puro, conectado a _supabase
 // Un solo login para todos: el rol (CLIENTE / ADMINISTRADOR) se lee de la
@@ -101,7 +101,7 @@ document.addEventListener('input', (e) => {
   if (control) control.classList.remove('is-invalid');
 });
 
-// Traduce los errores de __supabase Auth a mensajes claros
+// Traduce los errores de _supabase Auth a mensajes claros
 function mensajeAuth(err) {
   const m = (err && err.message) || '';
   if (/invalid login credentials/i.test(m)) return 'Credenciales inválidas, verifique su usuario o contraseña';
@@ -130,7 +130,7 @@ function irA(hash) {
 }
 
 function detenerActualizaciones() {
-  if (canalCitas) { __supabase.removeChannel(canalCitas); canalCitas = null; }
+  if (canalCitas) { _supabase.removeChannel(canalCitas); canalCitas = null; }
   clearInterval(timerRespaldo); timerRespaldo = null;
   clearTimeout(timerDebounce);
 }
@@ -197,7 +197,7 @@ function suscribirCitas(recargar, filtro) {
   const config = { event: '*', schema: 'public', table: 'citas' };
   if (filtro) config.filter = filtro;
 
-  canalCitas = __supabase.channel(`citas-${perfilActual.id}`)
+  canalCitas = _supabase.channel(`citas-${perfilActual.id}`)
     .on('postgres_changes', config, alCambiar)
     .subscribe((estado) => {
       if (estado === 'SUBSCRIBED') {
@@ -212,29 +212,29 @@ function suscribirCitas(recargar, filtro) {
 // SESIÓN Y PERFIL
 // ---------------------------------------------------------------------
 async function obtenerPerfil(user) {
-  let { data } = await __supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
+  let { data } = await _supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
   if (data) return data;
 
   // Respaldo: si el perfil no existe (usuario creado antes del trigger),
   // el propio usuario puede crearse uno, siempre como CLIENTE.
   const meta = user.user_metadata || {};
-  const { error } = await __supabase.from('profiles').insert([{
+  const { error } = await _supabase.from('profiles').insert([{
     id: user.id, nombre: meta.nombre || user.email, telefono: meta.telefono || '', rol: 'CLIENTE'
   }]);
   if (error) return null;
-  ({ data } = await __supabase.from('profiles').select('*').eq('id', user.id).maybeSingle());
+  ({ data } = await _supabase.from('profiles').select('*').eq('id', user.id).maybeSingle());
   return data || null;
 }
 
 // Lee la sesión guardada y carga el perfil (y con él, el rol)
 async function restaurarSesion() {
-  const { data: { session } } = await __supabase.auth.getSession();
+  const { data: { session } } = await _supabase.auth.getSession();
   if (!session) { perfilActual = null; return false; }
 
   const perfil = await obtenerPerfil(session.user);
   if (!perfil) {
     perfilActual = null;
-    await __supabase.auth.signOut();
+    await _supabase.auth.signOut();
     mostrarNotificacion('No se pudo cargar tu perfil. Intenta iniciar sesión de nuevo.', true);
     return false;
   }
@@ -245,14 +245,14 @@ async function restaurarSesion() {
 async function cerrarSesion(mensaje = 'Sesión cerrada') {
   perfilActual = null; // antes del signOut, para que el listener no repita el cierre
   detenerActualizaciones();
-  await __supabase.auth.signOut();
+  await _supabase.auth.signOut();
   if (mensaje) mostrarNotificacion(mensaje);
   irA(RUTA_LOGIN);
 }
 $('btn-logout').addEventListener('click', () => cerrarSesion());
 
 // Si la sesión se cierra por otro motivo (token vencido, otra pestaña), volver al login
-__supabase.auth.onAuthStateChange((evento) => {
+_supabase.auth.onAuthStateChange((evento) => {
   if (evento === 'SIGNED_OUT' && perfilActual) {
     perfilActual = null;
     detenerActualizaciones();
@@ -295,7 +295,7 @@ formAuthRegistro.addEventListener('submit', async (e) => {
   bloquearBoton(btn, 'Creando cuenta…');
 
   try {
-    const { data, error } = await __supabase.auth.signUp({
+    const { data, error } = await _supabase.auth.signUp({
       email, password, options: { data: { nombre, telefono } }
     });
     if (error) { mostrarNotificacion(mensajeAuth(error), true); return; }
@@ -307,7 +307,7 @@ formAuthRegistro.addEventListener('submit', async (e) => {
       return;
     }
 
-    // Sin sesión = __supabase está pidiendo confirmar el correo
+    // Sin sesión = _supabase está pidiendo confirmar el correo
     if (!data.session) {
       formAuthRegistro.reset();
       $('tab-login').click();
@@ -341,7 +341,7 @@ formAuthLogin.addEventListener('submit', async (e) => {
   bloquearBoton(btn, 'Verificando…');
 
   try {
-    const { error } = await __supabase.auth.signInWithPassword({ email, password });
+    const { error } = await _supabase.auth.signInWithPassword({ email, password });
     if (error) { mostrarNotificacion(mensajeAuth(error), true); return; }
 
     if (await restaurarSesion()) {
@@ -383,8 +383,8 @@ formMascota.addEventListener('submit', async (e) => {
   }
 
   const { error } = idEnEdicion
-    ? await __supabase.from('mascotas').update({ nombre, especie, raza, edad }).eq('id', idEnEdicion)
-    : await __supabase.from('mascotas').insert([{ user_id: perfilActual.id, nombre, especie, raza, edad }]);
+    ? await _supabase.from('mascotas').update({ nombre, especie, raza, edad }).eq('id', idEnEdicion)
+    : await _supabase.from('mascotas').insert([{ user_id: perfilActual.id, nombre, especie, raza, edad }]);
 
   if (error) return mostrarNotificacion('Error: ' + error.message, true);
 
@@ -395,7 +395,7 @@ formMascota.addEventListener('submit', async (e) => {
 
 async function cargarMascotas() {
   if (!perfilActual) return;
-  const { data: mascotas, error } = await __supabase.from('mascotas')
+  const { data: mascotas, error } = await _supabase.from('mascotas')
     .select('*').eq('user_id', perfilActual.id).order('nombre', { ascending: true });
 
   if (error || !mascotas) {
@@ -452,9 +452,8 @@ function iniciarEdicionMascota(id, mascotas) {
 async function eliminarMascota(id) {
   if (!window.confirm('¿Eliminar esta mascota? Esta acción no se puede deshacer.')) return;
 
-  const { error } = await __supabase.from('mascotas').delete().eq('id', id);
+  const { error } = await _supabase.from('mascotas').delete().eq('id', id);
   if (error) {
-    // 23001 / 23503: la mascota tiene citas asociadas (integridad referencial)
     const porCitas = ['23001', '23503'].includes(error.code);
     return mostrarNotificacion(porCitas
       ? 'No se puede eliminar: esta mascota tiene citas registradas.'
@@ -486,7 +485,7 @@ formCita.addEventListener('submit', async (e) => {
   const mascota_id = selectMascotas.value;
   const requiere_ruta = checkRuta.checked;
   const direccion = inputDireccion.value.trim();
-  const fecha = new Date(inputFechaCita.value); // el navegador la interpreta en hora local
+  const fecha = new Date(inputFechaCita.value);
 
   if (!mascota_id) return mostrarNotificacion('Selecciona una de tus mascotas', true);
   if (!inputFechaCita.value || Number.isNaN(fecha.getTime())) return marcarInvalido('cita-fecha', 'Selecciona la fecha y la hora');
@@ -496,7 +495,7 @@ formCita.addEventListener('submit', async (e) => {
   }
   if (requiere_ruta && !direccion) return marcarInvalido('cita-direccion', 'Debe ingresar una dirección para solicitar ruta');
 
-  const { error } = await __supabase.from('citas').insert([{
+  const { error } = await _supabase.from('citas').insert([{
     user_id: perfilActual.id,
     mascota_id: Number(mascota_id),
     servicio: $('cita-servicio').value,
@@ -504,7 +503,7 @@ formCita.addEventListener('submit', async (e) => {
     especificaciones: $('cita-notas').value.trim() || null,
     requiere_ruta,
     direccion: requiere_ruta ? direccion : null,
-    fecha_hora: fecha.toISOString(), // con zona horaria, para que se guarde y muestre bien
+    fecha_hora: fecha.toISOString(),
     estado: 'Pendiente'
   }]);
 
@@ -523,7 +522,7 @@ formCita.addEventListener('submit', async (e) => {
 async function cargarMisCitas() {
   if (!perfilActual || perfilActual.rol !== 'CLIENTE') return;
 
-  const { data: citas, error } = await __supabase.from('citas')
+  const { data: citas, error } = await _supabase.from('citas')
     .select('*, mascotas(nombre, especie, raza)')
     .eq('user_id', perfilActual.id)
     .order('fecha_hora', { ascending: false });
@@ -557,13 +556,12 @@ function renderizarMisCitas(citas) {
     </div>`).join('');
 }
 
-// Delegación de eventos: el listado se redibuja con el tiempo real
 listaMisCitasEl.addEventListener('click', async (e) => {
   const btn = e.target.closest('[data-cancelar]');
   if (!btn) return;
   if (!window.confirm('¿Cancelar esta cita?')) return;
 
-  const { data, error } = await __supabase.from('citas')
+  const { data, error } = await _supabase.from('citas')
     .update({ estado: 'Cancelada' })
     .eq('id', btn.dataset.cancelar).eq('estado', 'Pendiente')
     .select();
@@ -580,7 +578,7 @@ listaMisCitasEl.addEventListener('click', async (e) => {
 async function cargarCitasAdmin() {
   if (!perfilActual || perfilActual.rol !== 'ADMINISTRADOR') return;
 
-  const { data: citas, error } = await __supabase.from('citas')
+  const { data: citas, error } = await _supabase.from('citas')
     .select('*, mascotas(nombre, especie, raza), profiles(nombre, telefono)')
     .order('fecha_hora', { ascending: true });
 
@@ -620,7 +618,6 @@ function badgeClaseEstado(estado) {
   }
 }
 
-// Botones de un clic según el estado actual, o un candado si el ciclo terminó
 function construirAccionesRapidas(cita) {
   const botones = [];
   if (cita.estado === 'Pendiente') {
@@ -651,7 +648,7 @@ function renderizarTarjetasCitas(citas) {
     const mascota = cita.mascotas || {};
     const cliente = cita.profiles || {};
     const imgUrl = mascota.especie === 'Gato'
-      ? 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1__supabasea?auto=format&fit=crop&w=150&q=80'
+      ? 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1?auto=format&fit=crop&w=150&q=80'
       : 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=150&q=80';
     const direccion = cita.requiere_ruta ? (cita.direccion || 'Sin especificar') : 'No aplica (sin ruta)';
 
@@ -693,9 +690,8 @@ async function cambiarEstado(citaId, nuevoEstado) {
   if (nuevoEstado === 'Rechazada' &&
       !window.confirm('¿Rechazar esta cita? El cliente verá el estado "Rechazada".')) return;
 
-  const { data, error } = await __supabase.from('citas').update({ estado: nuevoEstado }).eq('id', citaId).select();
+  const { data, error } = await _supabase.from('citas').update({ estado: nuevoEstado }).eq('id', citaId).select();
 
-  // El trigger de la base de datos rechaza saltos de estado con un mensaje claro
   if (error) mostrarNotificacion(error.message, true);
   else if (!data || data.length === 0) mostrarNotificacion('No se pudo actualizar la cita (sin permiso).', true);
   else mostrarNotificacion(`Cita actualizada a: ${nuevoEstado}`);
@@ -708,7 +704,7 @@ filtroBuscar.addEventListener('input', aplicarFiltros);
 filtroEstado.addEventListener('change', aplicarFiltros);
 
 // ---------------------------------------------------------------------
-// ARRANQUE: restaura la sesión de __supabase si ya existía y navega según el rol
+// ARRANQUE: restaura la sesión de _supabase si ya existía y navega según el rol
 // ---------------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', async () => {
   await restaurarSesion();
