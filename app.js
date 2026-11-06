@@ -1,12 +1,15 @@
+const SUPABASE_URL = 'https://zoxzuqqssiarhtzfqjgy.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_5bSUa-5IvFVTTz839EaaZA_BlzMDNko';
+
+
+const { createClient } = supabase;
+const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // =====================================================================
 // PETSTYLE · app.js — HTML + CSS + JavaScript puro, conectado a Supabase
 // Un solo login para todos: el rol (CLIENTE / ADMINISTRADOR) se lee de la
 // tabla `profiles` y cada rol ve SU vista. El administrador lo asigna el
 // responsable del sistema desde Supabase (ver database/schema.sql).
 // =====================================================================
-
-const { SUPABASE_URL, SUPABASE_KEY } = window.PETSTYLE_CONFIG;
-const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const ESTADOS_TERMINALES = ['Entregada', 'Rechazada', 'Cancelada'];
 const REFRESCO_RESPALDO_MS = 15000; // solo si el tiempo real no está disponible
