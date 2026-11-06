@@ -130,7 +130,7 @@ function irA(hash) {
 }
 
 function detenerActualizaciones() {
-  if (canalCitas) { db.removeChannel(canalCitas); canalCitas = null; }
+  if (canalCitas) { supabase.removeChannel(canalCitas); canalCitas = null; }
   clearInterval(timerRespaldo); timerRespaldo = null;
   clearTimeout(timerDebounce);
 }
@@ -197,7 +197,7 @@ function suscribirCitas(recargar, filtro) {
   const config = { event: '*', schema: 'public', table: 'citas' };
   if (filtro) config.filter = filtro;
 
-  canalCitas = db.channel(`citas-${perfilActual.id}`)
+  canalCitas = supabase.channel(`citas-${perfilActual.id}`)
     .on('postgres_changes', config, alCambiar)
     .subscribe((estado) => {
       if (estado === 'SUBSCRIBED') {
@@ -212,29 +212,29 @@ function suscribirCitas(recargar, filtro) {
 // SESIÓN Y PERFIL
 // ---------------------------------------------------------------------
 async function obtenerPerfil(user) {
-  let { data } = await db.from('profiles').select('*').eq('id', user.id).maybeSingle();
+  let { data } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
   if (data) return data;
 
   // Respaldo: si el perfil no existe (usuario creado antes del trigger),
   // el propio usuario puede crearse uno, siempre como CLIENTE.
   const meta = user.user_metadata || {};
-  const { error } = await db.from('profiles').insert([{
+  const { error } = await supabase.from('profiles').insert([{
     id: user.id, nombre: meta.nombre || user.email, telefono: meta.telefono || '', rol: 'CLIENTE'
   }]);
   if (error) return null;
-  ({ data } = await db.from('profiles').select('*').eq('id', user.id).maybeSingle());
+  ({ data } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle());
   return data || null;
 }
 
 // Lee la sesión guardada y carga el perfil (y con él, el rol)
 async function restaurarSesion() {
-  const { data: { session } } = await db.auth.getSession();
+  const { data: { session } } = await supabase.auth.getSession();
   if (!session) { perfilActual = null; return false; }
 
   const perfil = await obtenerPerfil(session.user);
   if (!perfil) {
     perfilActual = null;
-    await db.auth.signOut();
+    await supabase.auth.signOut();
     mostrarNotificacion('No se pudo cargar tu perfil. Intenta iniciar sesión de nuevo.', true);
     return false;
   }
@@ -245,14 +245,14 @@ async function restaurarSesion() {
 async function cerrarSesion(mensaje = 'Sesión cerrada') {
   perfilActual = null; // antes del signOut, para que el listener no repita el cierre
   detenerActualizaciones();
-  await db.auth.signOut();
+  await supabase.auth.signOut();
   if (mensaje) mostrarNotificacion(mensaje);
   irA(RUTA_LOGIN);
 }
 $('btn-logout').addEventListener('click', () => cerrarSesion());
 
 // Si la sesión se cierra por otro motivo (token vencido, otra pestaña), volver al login
-db.auth.onAuthStateChange((evento) => {
+supabase.auth.onAuthStateChange((evento) => {
   if (evento === 'SIGNED_OUT' && perfilActual) {
     perfilActual = null;
     detenerActualizaciones();
@@ -295,7 +295,7 @@ formAuthRegistro.addEventListener('submit', async (e) => {
   bloquearBoton(btn, 'Creando cuenta…');
 
   try {
-    const { data, error } = await db.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email, password, options: { data: { nombre, telefono } }
     });
     if (error) { mostrarNotificacion(mensajeAuth(error), true); return; }
@@ -341,7 +341,7 @@ formAuthLogin.addEventListener('submit', async (e) => {
   bloquearBoton(btn, 'Verificando…');
 
   try {
-    const { error } = await db.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) { mostrarNotificacion(mensajeAuth(error), true); return; }
 
     if (await restaurarSesion()) {
@@ -383,8 +383,8 @@ formMascota.addEventListener('submit', async (e) => {
   }
 
   const { error } = idEnEdicion
-    ? await db.from('mascotas').update({ nombre, especie, raza, edad }).eq('id', idEnEdicion)
-    : await db.from('mascotas').insert([{ user_id: perfilActual.id, nombre, especie, raza, edad }]);
+    ? await supabase.from('mascotas').update({ nombre, especie, raza, edad }).eq('id', idEnEdicion)
+    : await supabase.from('mascotas').insert([{ user_id: perfilActual.id, nombre, especie, raza, edad }]);
 
   if (error) return mostrarNotificacion('Error: ' + error.message, true);
 
@@ -395,7 +395,7 @@ formMascota.addEventListener('submit', async (e) => {
 
 async function cargarMascotas() {
   if (!perfilActual) return;
-  const { data: mascotas, error } = await db.from('mascotas')
+  const { data: mascotas, error } = await supabase.from('mascotas')
     .select('*').eq('user_id', perfilActual.id).order('nombre', { ascending: true });
 
   if (error || !mascotas) {
@@ -452,7 +452,7 @@ function iniciarEdicionMascota(id, mascotas) {
 async function eliminarMascota(id) {
   if (!window.confirm('¿Eliminar esta mascota? Esta acción no se puede deshacer.')) return;
 
-  const { error } = await db.from('mascotas').delete().eq('id', id);
+  const { error } = await supabase.from('mascotas').delete().eq('id', id);
   if (error) {
     // 23001 / 23503: la mascota tiene citas asociadas (integridad referencial)
     const porCitas = ['23001', '23503'].includes(error.code);
@@ -496,7 +496,7 @@ formCita.addEventListener('submit', async (e) => {
   }
   if (requiere_ruta && !direccion) return marcarInvalido('cita-direccion', 'Debe ingresar una dirección para solicitar ruta');
 
-  const { error } = await db.from('citas').insert([{
+  const { error } = await supabase.from('citas').insert([{
     user_id: perfilActual.id,
     mascota_id: Number(mascota_id),
     servicio: $('cita-servicio').value,
@@ -523,7 +523,7 @@ formCita.addEventListener('submit', async (e) => {
 async function cargarMisCitas() {
   if (!perfilActual || perfilActual.rol !== 'CLIENTE') return;
 
-  const { data: citas, error } = await db.from('citas')
+  const { data: citas, error } = await supabase.from('citas')
     .select('*, mascotas(nombre, especie, raza)')
     .eq('user_id', perfilActual.id)
     .order('fecha_hora', { ascending: false });
@@ -563,7 +563,7 @@ listaMisCitasEl.addEventListener('click', async (e) => {
   if (!btn) return;
   if (!window.confirm('¿Cancelar esta cita?')) return;
 
-  const { data, error } = await db.from('citas')
+  const { data, error } = await supabase.from('citas')
     .update({ estado: 'Cancelada' })
     .eq('id', btn.dataset.cancelar).eq('estado', 'Pendiente')
     .select();
@@ -580,7 +580,7 @@ listaMisCitasEl.addEventListener('click', async (e) => {
 async function cargarCitasAdmin() {
   if (!perfilActual || perfilActual.rol !== 'ADMINISTRADOR') return;
 
-  const { data: citas, error } = await db.from('citas')
+  const { data: citas, error } = await supabase.from('citas')
     .select('*, mascotas(nombre, especie, raza), profiles(nombre, telefono)')
     .order('fecha_hora', { ascending: true });
 
@@ -651,7 +651,7 @@ function renderizarTarjetasCitas(citas) {
     const mascota = cita.mascotas || {};
     const cliente = cita.profiles || {};
     const imgUrl = mascota.especie === 'Gato'
-      ? 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=150&q=80'
+      ? 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1supabasea?auto=format&fit=crop&w=150&q=80'
       : 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=150&q=80';
     const direccion = cita.requiere_ruta ? (cita.direccion || 'Sin especificar') : 'No aplica (sin ruta)';
 
@@ -693,7 +693,7 @@ async function cambiarEstado(citaId, nuevoEstado) {
   if (nuevoEstado === 'Rechazada' &&
       !window.confirm('¿Rechazar esta cita? El cliente verá el estado "Rechazada".')) return;
 
-  const { data, error } = await db.from('citas').update({ estado: nuevoEstado }).eq('id', citaId).select();
+  const { data, error } = await supabase.from('citas').update({ estado: nuevoEstado }).eq('id', citaId).select();
 
   // El trigger de la base de datos rechaza saltos de estado con un mensaje claro
   if (error) mostrarNotificacion(error.message, true);
