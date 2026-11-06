@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PetStyle · Peluquería Canina Profesional</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ============ PANTALLA 1 · AUTENTICACIÓN (VISIBLE) ============ -->
+<div id="pantalla-login" class="auth-screen">
+  <div class="auth-frame">
+
+    <!-- Columna editorial -->
+    <aside class="auth-visual" aria-hidden="true">
+      <img src="https://images.unsplash.com/photo-1591946614720-90a587da4a36?auto=format&fit=crop&w=1200&q=80" alt="" class="auth-visual__img">
+      <div class="auth-visual__scrim"></div>
+      <div class="auth-visual__content">
+        <span class="brandmark">
+          <i class="ph-fill ph-scissors"></i> PetStyle
+        </span>
+        <p class="auth-visual__quote">Cada cita empieza con una mascota nerviosa y termina con una cola moviéndose sin parar.</p>
+        <ul class="auth-visual__facts">
+          <li><i class="ph ph-flower-lotus"></i> Baño spa y estilismo</li>
+          <li><i class="ph ph-van"></i> Ruta de recogida a domicilio</li>
+          <li><i class="ph ph-heart-straight"></i> Trato adaptado a cada raza</li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Card de acceso -->
+    <section class="auth-card">
+      <div class="auth-card__inner">
+
+        <header class="auth-head">
+          <span class="auth-head__badge"><i class="ph-fill ph-scissors"></i></span>
+          <h1>Bienvenido de vuelta</h1>
+          <p>Gestiona citas, mascotas y equipo desde un solo lugar.</p>
+        </header>
+
+        <nav class="tabs" role="tablist" aria-label="Acceso">
+          <button type="button" class="tab-btn active" id="tab-login" data-target="sec-login" role="tab" aria-selected="true">Ingresar</button>
+          <button type="button" class="tab-btn" id="tab-registro" data-target="sec-registro" role="tab" aria-selected="false">Crear cuenta</button>
+          <span class="tabs__thumb" aria-hidden="true"></span>
+        </nav>
+
+        <div class="tab-panels">
+
+          <!-- LOGIN -->
+          <div class="tab-panel active" id="sec-login" role="tabpanel">
+            <form id="form-auth-login" class="form" novalidate>
+
+              <label class="field">
+                <span class="field__label">Correo electrónico</span>
+                <span class="field__control">
+                  <i class="ph ph-envelope-simple"></i>
+                  <input type="email" id="login-usuario" placeholder="ana@ejemplo.com" autocomplete="username" required>
+                </span>
+              </label>
+
+              <label class="field">
+                <span class="field__label">Contraseña</span>
+                <span class="field__control">
+                  <i class="ph ph-lock-key"></i>
+                  <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" required>
+                </span>
+              </label>
+
+              <p class="auth-hint"><i class="ph ph-shield-check"></i> Tu rol se identifica automáticamente al iniciar sesión.</p>
+
+              <button type="submit" class="btn btn--primary btn--block" id="btn-login-submit">Iniciar sesión</button>
+            </form>
+          </div>
+
+          <!-- REGISTRO -->
+          <div class="tab-panel" id="sec-registro" role="tabpanel">
+            <form id="form-auth-registro" class="form" novalidate>
+
+              <label class="field">
+                <span class="field__label">Nombre completo</span>
+                <span class="field__control">
+                  <i class="ph ph-user"></i>
+                  <input type="text" id="reg-nombre" placeholder="Ana Gómez" required>
+                </span>
+              </label>
+
+              <label class="field">
+                <span class="field__label">Correo electrónico</span>
+                <span class="field__control">
+                  <i class="ph ph-envelope-simple"></i>
+                  <input type="email" id="reg-email" placeholder="ana@ejemplo.com" autocomplete="email" required>
+                </span>
+              </label>
+
+              <label class="field">
+                <span class="field__label">Teléfono de contacto</span>
+                <span class="field__control">
+                  <i class="ph ph-phone"></i>
+                  <input type="tel" id="reg-telefono" placeholder="300 123 4567" required>
+                </span>
+              </label>
+
+              <label class="field">
+                <span class="field__label">Crear contraseña</span>
+                <span class="field__control">
+                  <i class="ph ph-lock-key"></i>
+                  <input type="password" id="reg-password" placeholder="Mínimo 6 caracteres" minlength="6" autocomplete="new-password" required>
+                </span>
+              </label>
+
+              <p class="auth-hint"><i class="ph ph-shield-check"></i> Tu cuenta se crea como Cliente. Las cuentas de Administrador las asigna el responsable del sistema.</p>
+
+              <button type="submit" class="btn btn--primary btn--block" id="btn-registro-submit">Completar registro</button>
+            </form>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<!-- ============ PANTALLA 2 · SISTEMA (OCULTA) ============ -->
+<div id="pantalla-sistema" class="app d-none">
+
+  <header class="navbar">
+    <div class="navbar__inner">
+      <span class="brandmark brandmark--dark"><i class="ph-fill ph-scissors"></i> PetStyle</span>
+      <div class="navbar__user">
+        <span class="chip" id="label-usuario"><i class="ph ph-user-circle"></i> Usuario</span>
+        <button class="btn btn--ghost-danger" id="btn-logout"><i class="ph ph-sign-out"></i> Salir</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell">
+
+    <!-- ===== VISTA CLIENTE (OCULTA) ===== -->
+    <section id="vista-cliente" class="d-none view">
+
+      <div class="hero">
+        <img src="https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?auto=format&fit=crop&w=1400&q=80" alt="" class="hero__img">
+        <div class="hero__scrim"></div>
+        <div class="hero__content">
+          <span class="pill pill--light"><i class="ph-fill ph-star"></i> Servicio VIP</span>
+          <h1>Consiente a tu mejor amigo</h1>
+          <p>Registra a tus mascotas y agenda su próximo baño o corte en un par de minutos.</p>
+        </div>
+      </div>
+
+      <div class="bento">
+
+        <article class="card card--mascota">
+          <h2 class="card__title"><i class="ph ph-plus-circle"></i> Registrar mascota</h2>
+          <form id="form-mascota" class="form">
+
+            <label class="field">
+              <span class="field__label">Nombre de la mascota</span>
+              <span class="field__control">
+                <i class="ph ph-tag"></i>
+                <input type="text" id="mascota-nombre" placeholder="Ej. Toby" required>
+              </span>
+            </label>
+
+            <div class="field-row">
+              <label class="field">
+                <span class="field__label">Especie</span>
+                <span class="field__control field__control--select">
+                  <i class="ph ph-paw-print"></i>
+                  <select id="mascota-especie" required>
+                    <option value="Perro">Perro</option>
+                    <option value="Gato">Gato</option>
+                  </select>
+                </span>
+              </label>
+              <label class="field">
+                <span class="field__label">Raza</span>
+                <span class="field__control">
+                  <i class="ph ph-dna"></i>
+                  <input type="text" id="mascota-raza" placeholder="Ej. Golden" required>
+                </span>
+              </label>
+            </div>
+
+            <label class="field">
+              <span class="field__label">Edad (años, opcional)</span>
+              <span class="field__control">
+                <i class="ph ph-cake"></i>
+                <input type="number" id="mascota-edad" min="0" max="40" placeholder="Ej. 3">
+              </span>
+            </label>
+
+            <input type="hidden" id="mascota-edit-id" value="">
+
+            <div class="mascota-form-actions">
+              <button type="submit" class="btn btn--outline btn--block" id="btn-guardar-mascota">Guardar mascota</button>
+              <button type="button" class="btn btn--ghost d-none" id="btn-cancelar-edicion">Cancelar</button>
+            </div>
+          </form>
+
+          <div class="pet-list" id="lista-mascotas">
+            <p class="pet-list__empty">Cargando tus mascotas…</p>
+          </div>
+        </article>
+
+        <article class="card card--cita">
+          <h2 class="card__title"><i class="ph ph-calendar-plus"></i> Agendar cita</h2>
+          <form id="form-cita" class="form">
+
+            <label class="field">
+              <span class="field__label">Selecciona tu mascota</span>
+              <span class="field__control field__control--select">
+                <i class="ph ph-paw-print"></i>
+                <select id="cita-mascota" required>
+                  <option value="">Cargando mascotas…</option>
+                </select>
+              </span>
+            </label>
+
+            <div class="field-row">
+              <label class="field">
+                <span class="field__label">Servicio</span>
+                <span class="field__control field__control--select">
+                  <i class="ph ph-sparkle"></i>
+                  <select id="cita-servicio" required>
+                    <option value="Baño + Corte">Baño completo + corte</option>
+                    <option value="Solo Baño">Solo baño spa</option>
+                    <option value="Corte Higiénico">Corte higiénico y uñas</option>
+                  </select>
+                </span>
+              </label>
+              <label class="field">
+                <span class="field__label">Estilo de corte</span>
+                <span class="field__control">
+                  <i class="ph ph-scissors"></i>
+                  <input type="text" id="cita-corte" placeholder="Ej. Corte asiático">
+                </span>
+              </label>
+            </div>
+
+            <label class="field">
+              <span class="field__label">Notas / requerimientos</span>
+              <span class="field__control field__control--textarea">
+                <textarea id="cita-notas" rows="2" placeholder="Sensibilidad en orejas, piel delicada…"></textarea>
+              </span>
+            </label>
+
+            <label class="switch-row" for="check-ruta">
+              <span class="switch-row__text"><i class="ph ph-van"></i> ¿Necesitas servicio de transporte?</span>
+              <span class="switch">
+                <input type="checkbox" id="check-ruta">
+                <span class="switch__track"><span class="switch__thumb"></span></span>
+              </span>
+            </label>
+
+            <div class="field field--alert d-none" id="box-direccion">
+              <span class="field__label field__label--alert"><i class="ph ph-map-pin"></i> Dirección de recogida</span>
+              <span class="field__control">
+                <i class="ph ph-map-pin-line"></i>
+                <input type="text" id="cita-direccion" placeholder="Dirección completa y barrio">
+              </span>
+            </div>
+
+            <label class="field">
+              <span class="field__label">Fecha y hora</span>
+              <span class="field__control">
+                <i class="ph ph-clock"></i>
+                <input type="datetime-local" id="cita-fecha" required>
+              </span>
+              <small class="field__hint">Las citas se agendan en bloques de 30 minutos (ej. 10:00 o 10:30).</small>
+            </label>
+
+            <button type="submit" class="btn btn--primary btn--block btn--glow">Confirmar reserva</button>
+          </form>
+        </article>
+
+      </div>
+
+      <article class="card card--mis-citas" id="card-mis-citas">
+        <h2 class="card__title"><i class="ph ph-list-checks"></i> Mis citas agendadas</h2>
+        <div class="mis-citas-list" id="lista-mis-citas">
+          <p class="pet-list__empty">Cargando tus citas…</p>
+        </div>
+      </article>
+
+    </section>
+
+    <!-- ===== VISTA ADMINISTRADOR (OCULTA) ===== -->
+    <section id="vista-admin" class="d-none view">
+
+      <div class="stats">
+        <div class="stat stat--teal">
+          <span class="stat__icon"><i class="ph ph-calendar-check"></i></span>
+          <span class="stat__label">Total de citas registradas</span>
+          <span class="stat__value" id="cnt-total">0</span>
+        </div>
+        <div class="stat stat--sun">
+          <span class="stat__icon"><i class="ph ph-hourglass-medium"></i></span>
+          <span class="stat__label">Citas activas</span>
+          <span class="stat__value" id="cnt-pendientes">0</span>
+        </div>
+        <div class="stat stat--coral">
+          <span class="stat__icon"><i class="ph ph-van"></i></span>
+          <span class="stat__label">Solicitudes de ruta</span>
+          <span class="stat__value" id="cnt-ruta">0</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel__head">
+          <h2 class="card__title"><i class="ph ph-kanban"></i> Panel operativo de citas</h2>
+          <button class="btn btn--ghost" id="btn-cargar-citas"><i class="ph ph-arrow-clockwise"></i> Refrescar</button>
+        </div>
+
+        <div class="filter-bar">
+          <span class="field__control field__control--search">
+            <i class="ph ph-magnifying-glass"></i>
+            <input type="text" id="filtro-buscar" placeholder="Buscar por mascota o servicio…">
+          </span>
+          <span class="field__control field__control--select">
+            <i class="ph ph-funnel"></i>
+            <select id="filtro-estado">
+              <option value="TODOS">Todos los estados</option>
+              <option value="Pendiente">Pendiente</option>
+              <option value="Aprobada">Aprobada</option>
+              <option value="En proceso">En proceso</option>
+              <option value="Rechazada">Rechazada</option>
+              <option value="Entregada">Entregada</option>
+              <option value="Cancelada">Cancelada</option>
+            </select>
+          </span>
+        </div>
+
+        <div id="contenedor-citas" class="citas-grid">
+          <!-- Tarjetas renderizadas con JS -->
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="app-toast" role="status" aria-live="polite">
+  <i class="ph-fill ph-check-circle toast__icon"></i>
+  <span class="toast__msg" id="toast-mensaje">Notificación</span>
+  <button type="button" class="toast__close" aria-label="Cerrar">
+    <i class="ph ph-x"></i>
+  </button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
